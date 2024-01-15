@@ -49,7 +49,8 @@ def decode_map_features_from_proto(map_features):
         'road_edge': [],
         'stop_sign': [],
         'crosswalk': [],
-        'speed_bump': []
+        'speed_bump': [],
+        'driveway': []
     }
     polylines = []
 
@@ -129,7 +130,13 @@ def decode_map_features_from_proto(map_features):
             cur_polyline = np.concatenate((cur_polyline[:, 0:3], cur_polyline_dir, cur_polyline[:, 3:]), axis=-1)
 
             map_infos['speed_bump'].append(cur_info)
+        elif cur_data.driveway.ByteSize() > 0:
+            global_type = polyline_type['TYPE_DRIVEWAY']
+            cur_polyline = np.stack([np.array([point.x, point.y, point.z, global_type]) for point in cur_data.driveway.polygon], axis=0)
+            cur_polyline_dir = get_polyline_dir(cur_polyline[:, 0:3])
+            cur_polyline = np.concatenate((cur_polyline[:, 0:3], cur_polyline_dir, cur_polyline[:, 3:]), axis=-1)
 
+            map_infos['driveway'].append(cur_info)
         else:
             print(cur_data)
             raise ValueError
@@ -221,9 +228,13 @@ def get_infos_from_protos(data_path, output_path=None, num_workers=8):
     src_files.sort()
 
     # func(src_files[0])
-    with multiprocessing.Pool(num_workers) as p:
-        data_infos = list(tqdm(p.imap(func, src_files), total=len(src_files)))
-
+    # with multiprocessing.Pool(num_workers) as p:
+    #     data_infos = list(tqdm(p.imap(func, src_files), total=len(src_files)))
+    # 串行执行 func 函数，src_file 是每个数据文件
+    data_infos = [func(src_file) for src_file in tqdm(src_files)]
+    # with futures.ThreadPoolExecutor(num_workers) as executor:
+    #     data_infos = executor.map(func, src_files)
+    #     data_infos = list(data_infos)
     all_infos = [item for infos in data_infos for item in infos]
     return all_infos
 

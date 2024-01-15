@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: data process",
+            "type": "python",
+            "request": "launch",
+            "program": "/opt/data/private/cyh/MTR/mtr/datasets/waymo/data_preprocess.py",
+            "args": ["data/waymo/scenario/", "data/waymo"],
+            "cwd": "${workspaceFolder}",
+            "python": "/home/cyh/anaconda3/envs/mtr/bin/python",
+            "console": "integratedTerminal"
+        }
+    ]
+}
