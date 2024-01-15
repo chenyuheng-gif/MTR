@@ -56,7 +56,7 @@ def parse_config():
     args = parser.parse_args()
 
     cfg_from_yaml_file(args.cfg_file, cfg)
-    cfg.TAG = Path(args.cfg_file).stem
+    cfg.TAG = Path(args.cfg_file).stem #.stem: 获取文件路径的基本名称部分，即文件名但不包括扩展名。
     cfg.EXP_GROUP_PATH = '/'.join(args.cfg_file.split('/')[1:-1])  # remove 'cfgs' and 'xxxx.yaml'
 
     if args.set_cfgs is not None:
@@ -108,7 +108,7 @@ def build_scheduler(optimizer, dataloader, opt_cfg, total_epochs, total_iters_ea
 
 
 def main():
-    args, cfg = parse_config()
+    args, cfg = parse_config() #cfg存了yaml文件中的参数
     if args.launcher == 'none':
         dist_train = False
         total_gpus = 1
@@ -131,7 +131,8 @@ def main():
 
     if args.fix_random_seed:
         common_utils.set_random_seed(666)
-
+    #cfg.ROOT_DIR = (Path(__file__).resolve().parent / '../').resolve() ,得到文件的根目录
+    #cfg.LOCAL_RANK = 0
     output_dir = cfg.ROOT_DIR / 'output' / cfg.EXP_GROUP_PATH / cfg.TAG / args.extra_tag
     ckpt_dir = output_dir / 'ckpt'
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -147,7 +148,7 @@ def main():
 
     if dist_train:
         logger.info('total_batch_size: %d' % (total_gpus * args.batch_size))
-    for key, val in vars(args).items():
+    for key, val in vars(args).items(): #打印所有的超参数
         logger.info('{:16} {}'.format(key, val))
     log_config_to_file(cfg, logger=logger)
     if cfg.LOCAL_RANK == 0:
@@ -176,10 +177,10 @@ def main():
     start_epoch = it = 0
     last_epoch = -1
 
-    if args.pretrained_model is not None:
+    if args.pretrained_model is not None: #预训练模型包含了模型的参数
         model.load_params_from_file(filename=args.pretrained_model, to_cpu=dist_train, logger=logger)
 
-    if args.ckpt is not None:
+    if args.ckpt is not None: #ckpt 包含了模型的参数和优化器的状态
         it, start_epoch = model.load_params_with_optimizer(args.ckpt, to_cpu=dist_train, optimizer=optimizer,
                                                            logger=logger)
         last_epoch = start_epoch + 1
